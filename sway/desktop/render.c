@@ -29,6 +29,8 @@
 #include "sway/tree/view.h"
 #include "sway/tree/workspace.h"
 
+#include "blackbox/render.h"
+
 struct render_data {
 	pixman_region32_t *damage;
 	float alpha;
@@ -382,6 +384,8 @@ static void render_view(struct sway_output *output, pixman_region32_t *damage,
 		scale_box(&box, output_scale);
 		render_rect(output, damage, &box, color);
 	}
+
+	blackbox_render_frame(output, damage, con, colors);
 }
 
 /**
@@ -393,7 +397,7 @@ static void render_view(struct sway_output *output, pixman_region32_t *damage,
  * The height is: 1px border, 3px padding, font height, 3px padding, 1px border
  * The left side is: 1px border, 2px padding, title
  */
-static void render_titlebar(struct sway_output *output,
+ void render_titlebar(struct sway_output *output,
 		pixman_region32_t *output_damage, struct sway_container *con,
 		int x, int y, int width,
 		struct border_colors *colors, struct wlr_texture *title_texture,
@@ -709,7 +713,7 @@ static void render_containers_linear(struct sway_output *output,
 			}
 
 			if (state->border == B_NORMAL) {
-				render_titlebar(output, damage, child, state->x,
+				blackbox_render_titlebar(view, output, damage, child, state->x,
 						state->y, state->width, colors,
 						title_texture, marks_texture);
 			} else if (state->border == B_PIXEL) {
@@ -771,7 +775,7 @@ static void render_containers_tabbed(struct sway_output *output,
 			tab_width = parent->box.width - tab_width * i;
 		}
 
-		render_titlebar(output, damage, child, x, parent->box.y, tab_width,
+		blackbox_render_titlebar(view, output, damage, child, x, parent->box.y, tab_width,
 				colors, title_texture, marks_texture);
 
 		if (child == current) {
@@ -830,7 +834,7 @@ static void render_containers_stacked(struct sway_output *output,
 		}
 
 		int y = parent->box.y + titlebar_height * i;
-		render_titlebar(output, damage, child, parent->box.x, y,
+		blackbox_render_titlebar(view, output, damage, child, parent->box.x, y,
 				parent->box.width, colors, title_texture, marks_texture);
 
 		if (child == current) {
@@ -929,7 +933,7 @@ static void render_floating_container(struct sway_output *soutput,
 		}
 
 		if (con->current.border == B_NORMAL) {
-			render_titlebar(soutput, damage, con, con->current.x,
+			blackbox_render_titlebar(view, soutput, damage, con, con->current.x,
 					con->current.y, con->current.width, colors,
 					title_texture, marks_texture);
 		} else if (con->current.border == B_PIXEL) {

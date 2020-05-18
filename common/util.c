@@ -9,12 +9,78 @@
 #include <wayland-server-protocol.h>
 #include "log.h"
 #include "util.h"
+#include "rgb.h"
 
-int wrap(int i, int max) {
-	return ((i % max) + max) % max;
+uint32_t make_cokor(int r, int g, int b) { return (r << 24) | (g << 16) | (b << 8) | 0xff; }
+
+int wrap(int i, int max) { return ((i % max) + max) % max; }
+
+bool parse_color_name(const char* spec, uint32_t* color)
+{
+    for (int i = 0;; i++) {
+        colorEntry* e = &colorTable[i];
+        if (!e->name) {
+            break;
+        }
+        if (strcmp(e->name, spec) == 0) {
+            *color = make_cokor(e->r, e->g, e->b);
+            return true;
+        }
+    }
+    return false;
 }
 
-bool parse_color(const char *color, uint32_t *result) {
+char* rpad(char* dest, const char* src, const char pad, const size_t sz)
+{
+    memset(dest, pad, sz);
+    dest[sz] = 0x0;
+    int l = strlen(src);
+    if (l>3) l=3;
+    memcpy(dest, src, l);
+    return dest;
+}
+
+bool parse_color_rgb(const char* spec, uint32_t* color)
+{
+    char* token = strtok((char*)spec, ":");
+    
+    // rgb:
+    if (!token) return false;
+    token = strtok(NULL, "/");
+
+    char red[8] = "";
+    char green[8] = "";
+    char blue[8] = "";
+
+    // red
+    if (!token) return false;
+    rpad(red, token, token[0], 2);
+    token = strtok(NULL, "/");
+    
+    // green
+    if (!token) return false;
+    rpad(green, token, token[0], 2);
+    token = strtok(NULL, "/");
+
+    // blue
+    if (!token) return false;
+    rpad(blue, token, token[0], 2);
+    
+    *color = make_cokor((strtol(red, NULL, 16)), (strtol(green, NULL, 16)),
+        (strtol(blue, NULL, 16)));
+    return true;
+}
+
+bool parse_color(const char* color, uint32_t* result)
+{
+    if (parse_color_rgb(color, result)) {
+        return true;
+    }
+
+    if (parse_color_name(color, result)) {
+        return true;
+    }
+
 	if (color[0] == '#') {
 		++color;
 	}

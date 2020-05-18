@@ -9,6 +9,8 @@
 #include "sway/input/input-manager.h"
 #include "sway/input/seat.h"
 
+#include "blackbox/blackbox.h"
+
 struct sway_container;
 struct sway_xdg_decoration;
 
@@ -112,6 +114,8 @@ struct sway_view {
 	int max_render_time; // In milliseconds
 
 	enum seat_config_shortcuts_inhibit shortcuts_inhibit;
+
+	struct bb_view blackbox;
 };
 
 struct sway_xdg_shell_view {

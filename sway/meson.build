@@ -11,6 +11,9 @@ sway_sources = files(
 	'swaynag.c',
 	'xdg_decoration.c',
 
+	'blackbox/render.c',
+	'blackbox/style.c',
+
 	'desktop/desktop.c',
 	'desktop/idle_inhibit_v1.c',
 	'desktop/layer_shell.c',

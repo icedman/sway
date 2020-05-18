@@ -13,6 +13,8 @@
 #include "sway/xwayland.h"
 #endif
 
+#include "blackbox/blackbox.h"
+
 struct seatop_default_event {
 	struct sway_node *previous_node;
 	uint32_t pressed_buttons[SWAY_CURSOR_PRESSED_BUTTONS_CAP];
@@ -84,6 +86,12 @@ static enum wlr_edges find_edge(struct sway_container *cont,
 	}
 	if (cursor->cursor->y >= cont->y + cont->height - cont->border_thickness) {
 		edge |= WLR_EDGE_BOTTOM;
+	}
+
+	if (cont->border != B_CSD && container_is_floating(cont)) {
+		if (find_hotspot(cont->view, cursor->cursor->x, cursor->cursor->y)) {
+			edge |= cont->view->blackbox.hotspot_edges;
+		}
 	}
 
 	return edge;

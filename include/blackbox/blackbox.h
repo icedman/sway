@@ -18,6 +18,10 @@ enum bb_hotspot_type {
 
 struct bb_view {
     struct wlr_box hotspots[HS_COUNT];
+    enum bb_hotspot_type hotspot;
+    uint32_t hotspot_edges;
 };
+
+bool find_hotspot(struct sway_view* view, double lx, double ly);
 
 #endif // BLACKBOX_H

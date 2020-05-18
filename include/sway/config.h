@@ -14,6 +14,8 @@
 #include "sway/tree/root.h"
 #include "wlr-layer-shell-unstable-v1-protocol.h"
 
+#include "blackbox/style.h"
+
 // TODO: Refactor this shit
 
 /**
@@ -607,6 +609,8 @@ struct sway_config {
 			char **argv;
 		} leftovers;
 	} handler_context;
+
+	struct bb_style style;
 };
 
 /**

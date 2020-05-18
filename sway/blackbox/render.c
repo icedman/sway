@@ -32,6 +32,19 @@
 #include "blackbox/style.h"
 #include "blackbox/render.h"
 
+void grow_box_lrtb(struct wlr_box* box, int l, int r, int t, int b)
+{
+    box->x -= l;
+    box->width += l + r;
+    box->y -= t;
+    box->height += t + b;
+}
+
+void grow_box_hv(struct wlr_box* box, int h, int v)
+{
+    grow_box_lrtb(box, h, h, v, v);
+}
+
 static void _scissor_output(struct wlr_output *wlr_output,
         pixman_box32_t *rect) {
     struct wlr_renderer *renderer = wlr_backend_get_renderer(wlr_output->backend);
@@ -100,12 +113,6 @@ void render_rect_texture(struct sway_output *output,
     pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
     for (int i = 0; i < nrects; ++i) {
         _scissor_output(wlr_output, &rects[i]);
-
-        /*
-        wlr_render_rect(renderer, &box, color,
-            wlr_output->transform_matrix);
-            */
-
         wlr_render_texture_with_matrix(renderer, texture, matrix, 1.0);
     }
 
@@ -145,10 +152,16 @@ void blackbox_render_titlebar(struct sway_view *view, struct sway_output *output
     box.y = y;
     box.width = width;
     box.height = titlebar_height;
+
+    // save hotspot before scaling
+    {
+        memcpy(&view->blackbox.hotspots[HS_EDGE_TOP], &box, sizeof(struct wlr_box));
+        view->blackbox.hotspots[HS_EDGE_TOP].height = BB_HOTSPOT_EDGE_THICKNESS;
+    }
+
     scale_box(&box, output_scale);
     render_rect(output, output_damage, &box, color);
-    // save as hotspot
-
+    
     // titlebar
     box.x = x + (titlebar_border_thickness * 2);
     box.y = y + (titlebar_border_thickness * 2);
@@ -168,13 +181,13 @@ void blackbox_render_titlebar(struct sway_view *view, struct sway_output *output
 
 void blackbox_render_frame(struct sway_output *output, pixman_region32_t *damage,
         struct sway_container *con, struct border_colors *colors) {
-    // struct sway_view *view = con->view;
+    struct sway_view *view = con->view;
     if (!container_is_floating(con)) {
         return;
     }
 
     float color1[4] = { 1.0, 0.0, 1.0, 1.0 };
-    // float color2[4] = { 1.0, 1.0, 1.0, 1.0 };
+    float color2[4] = { 1.0, 1.0, 1.0, 1.0 };
 
     struct wlr_box box;
     float output_scale = output->wlr_output->scale;
@@ -183,11 +196,55 @@ void blackbox_render_frame(struct sway_output *output, pixman_region32_t *damage
 
     memcpy(&color, color1, sizeof(float) * 4);
 
-    int bottom_height = 4 + (config->border_thickness * 2);
+    int bottom_height = BB_FOOTER_HEIGHT + (config->border_thickness * 2);
+
     box.x = state->x;
-    box.y = state->content_y + state->content_height - bottom_height;
+    box.y = state->content_y + state->content_height;
     box.width = state->width;
-    box.height = state->border_thickness + bottom_height;
+    box.height = bottom_height;
     scale_box(&box, output_scale);
     render_rect(output, damage, &box, color);
+
+    // save hotspot
+    memcpy(&view->blackbox.hotspots[HS_EDGE_BOTTOM], &box, sizeof(struct wlr_box));
+
+    // grips
+    int grip_width = 24;
+
+    memcpy(&color, color2, sizeof(float) * 4);
+
+    box.x = state->x + config->border_thickness;
+    box.y = state->content_y + state->content_height + config->border_thickness;
+    box.width = state->width - (config->border_thickness * 2);
+    box.height = bottom_height - (config->border_thickness * 2);
+
+    box.x += (grip_width + config->border_thickness);
+    box.width -= (grip_width + config->border_thickness)*2;
+    scale_box(&box, output_scale);
+    render_rect(output, damage, &box, color);
+
+    // left 
+    box.x = state->x + config->border_thickness;
+    box.y = state->content_y + state->content_height + config->border_thickness;
+    box.width = grip_width;
+    box.height = bottom_height - (config->border_thickness * 2);
+
+    memcpy(&view->blackbox.hotspots[HS_EDGE_BOTTOM_LEFT], &box, sizeof(struct wlr_box));
+    grow_box_hv(&view->blackbox.hotspots[HS_EDGE_BOTTOM_LEFT], BB_HOTSPOT_EDGE_THICKNESS, BB_HOTSPOT_EDGE_THICKNESS);
+
+    scale_box(&box, output_scale);
+    render_rect(output, damage, &box, color);
+
+    // right 
+    box.x = state->x + state->width - grip_width - config->border_thickness;
+    box.y = state->content_y + state->content_height + config->border_thickness;
+    box.width = grip_width;
+    box.height = bottom_height - (config->border_thickness * 2);
+
+    memcpy(&view->blackbox.hotspots[HS_EDGE_BOTTOM_RIGHT], &box, sizeof(struct wlr_box));
+    grow_box_hv(&view->blackbox.hotspots[HS_EDGE_BOTTOM_RIGHT], BB_HOTSPOT_EDGE_THICKNESS, BB_HOTSPOT_EDGE_THICKNESS);
+
+    scale_box(&box, output_scale);
+    render_rect(output, damage, &box, color);
+
 }

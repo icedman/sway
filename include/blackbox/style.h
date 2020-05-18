@@ -1,6 +1,9 @@
 #ifndef BLACKBOX_STYLE_H
 #define BLACKBOX_STYLE_H
 
+#define BB_FOOTER_HEIGHT 4 // excluding borders << read from config
+#define BB_HOTSPOT_EDGE_THICKNESS 6
+
 enum bb_style_flag {
     sf_solid = 1 << 1,
     sf_flat = 1 << 2,

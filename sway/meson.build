@@ -13,6 +13,7 @@ sway_sources = files(
 
 	'blackbox/render.c',
 	'blackbox/style.c',
+	'blackbox/blackbox.c',
 
 	'desktop/desktop.c',
 	'desktop/idle_inhibit_v1.c',
@@ -226,7 +227,7 @@ if have_xwayland
 endif
 
 executable(
-	'sway',
+	'swaybox',
 	sway_sources,
 	include_directories: [sway_inc],
 	dependencies: sway_deps,

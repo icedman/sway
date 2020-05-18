@@ -30,6 +30,8 @@
 #include "pango.h"
 #include "stringop.h"
 
+#include "blackbox/style.h"
+
 void view_init(struct sway_view *view, enum sway_view_type type,
 		const struct sway_view_impl *impl) {
 	view->type = type;
@@ -288,6 +290,10 @@ void view_autoconfigure(struct sway_view *view) {
 				- con->border_thickness * con->border_bottom;
 		}
 		break;
+	}
+
+	if (con->border != B_CSD && container_is_floating(con)) {
+		height -= BB_FOOTER_HEIGHT + con->border_thickness; // plus additional border
 	}
 
 	con->content_x = x;

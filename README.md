@@ -1,3 +1,28 @@
+# swaybox
+
+add blackbox/fluxbox/openbox features to sway while changing as little code as possible within sway itself
+
+## desktop/render.c
+
+override render_titlebar with blackbox_render_titlebar
+add blackbox_render_frame @ render_view
+
+## input/seatop_default.c
+
+find_edge
+check hotspots for floaters
+
+## tree/container.c
+
+container_set_geometry_from_content
+add bottom frame computation for floaters
+
+## tree/view.c
+
+void view_autoconfigure
+add bottom frame computation for floaters
+
+
 # sway
 
 [**English**](https://github.com/swaywm/sway/blob/master/README.md#sway--) - [日本語](https://github.com/swaywm/sway/blob/master/README.ja.md#sway--) - [Français](https://github.com/swaywm/sway/blob/master/README.fr.md#sway--) - [Українська](https://github.com/swaywm/sway/blob/master/README.uk.md#sway--) - [Español](https://github.com/swaywm/sway/blob/master/README.es.md#sway--) - [Polski](https://github.com/swaywm/sway/blob/master/README.pl.md#sway--) - [中文-简体](https://github.com/swaywm/sway/blob/master/README.zh-CN.md#sway--) - [Deutsch](https://github.com/swaywm/sway/blob/master/README.de.md#sway--) - [Nederlands](https://github.com/swaywm/sway/blob/master/README.nl.md#sway--) - [Русский](https://github.com/swaywm/sway/blob/master/README.ru.md#sway--)- [中文-繁體](https://github.com/swaywm/sway/blob/master/README.zh-TW.md#sway--) - [Português](https://github.com/swaywm/sway/blob/master/README.pt.md#sway--) - [Danish](https://github.com/swaywm/sway/blob/master/README.dk.md#sway--) - [한국어](https://github.com/swaywm/sway/blob/master/README.ko.md#sway--)

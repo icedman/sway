@@ -23,6 +23,8 @@
 #include "log.h"
 #include "stringop.h"
 
+#include "blackbox/style.h"
+
 struct sway_container *container_create(struct sway_view *view) {
 	struct sway_container *c = calloc(1, sizeof(struct sway_container));
 	if (!c) {
@@ -808,6 +810,11 @@ void container_set_geometry_from_content(struct sway_container *con) {
 	con->y = con->content_y - top;
 	con->width = con->content_width + border_width * 2;
 	con->height = top + con->content_height + border_width;
+
+	if (con->border != B_CSD && container_is_floating(con)) {
+		con->height = top + con->content_height + BB_FOOTER_HEIGHT + border_width * 2;
+	}
+
 	node_set_dirty(&con->node);
 }
 

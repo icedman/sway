@@ -17,6 +17,9 @@ check hotspots for floaters
 container_set_geometry_from_content
 add bottom frame computation for floaters
 
+update_title_texture
+remove title background paint
+
 ## tree/view.c
 
 void view_autoconfigure

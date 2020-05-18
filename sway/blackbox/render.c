@@ -75,7 +75,7 @@ void render_rect(struct sway_output *output,
 // _box.width and .height are expected to be output-buffer-local
 void render_rect_texture(struct sway_output *output,
         pixman_region32_t *output_damage, const struct wlr_box *_box,
-        struct wlr_texture* texture) {
+        struct wlr_texture* texture, struct wlr_box *_scissor_box) {
 
     if (!texture) {
         return;
@@ -109,6 +109,12 @@ void render_rect_texture(struct sway_output *output,
     wlr_matrix_project_box(matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL, 0.0,
         output->wlr_output->transform_matrix);
 
+    if (_scissor_box) {
+        wlr_renderer_scissor(renderer, _scissor_box);
+        wlr_render_texture_with_matrix(renderer, texture, matrix, 1.0);
+        goto damage_finish;
+    }
+
     int nrects;
     pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
     for (int i = 0; i < nrects; ++i) {
@@ -125,14 +131,18 @@ void blackbox_render_titlebar(struct sway_view *view, struct sway_output *output
         int x, int y, int width,
         struct border_colors *colors, struct wlr_texture *title_texture,
         struct wlr_texture *marks_texture) {
+
+    // struct wlr_renderer *renderer = wlr_backend_get_renderer(output->wlr_output->backend);
     struct wlr_box box;
+    struct wlr_box label_box;
+
     float color[4];
     float output_scale = output->wlr_output->scale;
     // double output_x = output->lx;
     // double output_y = output->ly;
     int titlebar_border_thickness = config->titlebar_border_thickness;
-    // int titlebar_h_padding = config->titlebar_h_padding;
-    // int titlebar_v_padding = config->titlebar_v_padding;
+    int titlebar_h_padding = config->titlebar_h_padding;
+    int titlebar_v_padding = config->titlebar_v_padding;
     // enum alignment title_align = config->title_align;
 
     float color1[4] = { 1.0, 0.0, 1.0, 1.0 };
@@ -175,8 +185,26 @@ void blackbox_render_titlebar(struct sway_view *view, struct sway_output *output
     box.y = y + ((titlebar_border_thickness + margin) * 2);
     box.width = width - ((titlebar_border_thickness + margin) * 4);
     box.height = titlebar_height - ((titlebar_border_thickness + margin) * 4);
+
+    memcpy(&label_box, &box, sizeof(struct wlr_box));
+
     scale_box(&box, output_scale);
     render_rect(output, output_damage, &box, color1);
+
+    // title
+    if (title_texture) {
+        wlr_texture_get_size(title_texture,
+            &box.width, &box.height);
+        box.x = x + titlebar_border_thickness + margin + titlebar_h_padding;
+        box.y = y + titlebar_border_thickness + margin + titlebar_v_padding;
+
+        label_box.x *= output->wlr_output->scale;
+        label_box.y *= output->wlr_output->scale;
+        label_box.width -= titlebar_h_padding;
+        label_box.width *= output->wlr_output->scale;
+
+        render_rect_texture(output, output_damage, &box, title_texture, &label_box);
+    }
 }
 
 void blackbox_render_frame(struct sway_output *output, pixman_region32_t *damage,
@@ -223,7 +251,7 @@ void blackbox_render_frame(struct sway_output *output, pixman_region32_t *damage
     scale_box(&box, output_scale);
     render_rect(output, damage, &box, color);
 
-    // left 
+    // left
     box.x = state->x + config->border_thickness;
     box.y = state->content_y + state->content_height + config->border_thickness;
     box.width = grip_width;
